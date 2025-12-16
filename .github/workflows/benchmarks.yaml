@@ -8,7 +8,7 @@ on:
 jobs:
     # Check what types of changes this PR contains
   check-changes:
-    name: Check what files changed
+    name: Check what files change
     runs-on: S390X
     outputs:
       go: ${{ steps.changes.outputs.go }}
