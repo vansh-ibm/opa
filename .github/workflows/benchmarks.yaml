@@ -103,7 +103,7 @@ jobs:
     needs: [check-changes, benchmarks] # force sequential commits for notebook and benchmark results
     if: ${{ needs.check-changes.outputs.go == 'true' }}
     steps:
-      - name: Setup OPA
+      - name: Setup OPA debug
         uses: open-policy-agent/setup-opa@950f159a49aa91f9323f36f1de81c7f6b5de9576 # v2.3.0
         env:
           ACTIONS_STEP_DEBUG: true
