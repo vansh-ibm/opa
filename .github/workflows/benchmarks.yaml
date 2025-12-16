@@ -83,6 +83,11 @@ jobs:
         name: Read go version
         run: echo "go_version=$(cat .go-version)" >> $GITHUB_OUTPUT
         working-directory: opa
+      - name: Clean gobenchdata workspace
+        run: |
+          echo "Cleaning workspace before gobenchdata..."
+          rm -rf opa/*  # remove everything inside "opa"
+          mkdir -p opa
     
       - name: gobenchdata publish
         run: go run go.bobheadxi.dev/gobenchdata@v1 action
