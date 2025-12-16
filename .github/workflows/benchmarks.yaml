@@ -72,14 +72,18 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           path: opa
+      - name: Install Build Dependencies
+        run: |
+          wget -q https://go.dev/dl/go1.25.4.linux-s390x.tar.gz
+          chmod ugo+r go1.25.4.linux-s390x.tar.gz
+          sudo tar -C /usr/local -xzf go1.25.4.linux-s390x.tar.gz
+          export PATH=$PATH:/usr/local/go/bin
+
       - id: go_version
         name: Read go version
         run: echo "go_version=$(cat .go-version)" >> $GITHUB_OUTPUT
         working-directory: opa
-      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
-        with:
-          go-version: ${{ steps.go_version.outputs.go_version }}
-          cache-dependency-path: opa/go.sum
+    
       - name: gobenchdata publish
         run: go run go.bobheadxi.dev/gobenchdata@v1 action
         env:
