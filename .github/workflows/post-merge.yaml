@@ -123,6 +123,13 @@ jobs:
           GOARCH: arm64
           TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
 
+      - name: Build Linux s390x
+        run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
+        timeout-minutes: 30
+        env:
+          GOARCH: s390x
+          TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
+
       - name: Upload binaries
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
