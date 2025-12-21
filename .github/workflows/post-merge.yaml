@@ -108,10 +108,19 @@ jobs:
         name: Read go version
         run: echo "go_version=$(cat .go-version)" >> $GITHUB_OUTPUT
 
-      - name: Install Go (${{ steps.go_version.outputs.go_version }})
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
-        with:
-          go-version: ${{ steps.go_version.outputs.go_version }}
+      - name: Install Go 1.25.5 (s390x)
+        run: |
+          set -e
+          GO_VERSION=1.25.5
+
+          sudo rm -rf /usr/local/go
+
+          wget -q https://go.dev/dl/go${GO_VERSION}.linux-s390x.tar.gz
+          sudo tar -C /usr/local -xzf go${GO_VERSION}.linux-s390x.tar.gz
+
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
+
+          go version
 
       - name: Build Linux s390x
         run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
