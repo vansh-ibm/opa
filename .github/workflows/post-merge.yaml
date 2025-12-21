@@ -110,6 +110,13 @@ jobs:
         with:
           go-version: ${{ steps.go_version.outputs.go_version }}
 
+      - name: Build Linux s390x
+        run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
+        timeout-minutes: 30
+        env:
+          GOARCH: s390x
+          TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
+
       - name: Build Linux and Windows
         run: make ci-build-windows ci-go-ci-build-linux ci-go-ci-build-linux-static
         timeout-minutes: 30
@@ -121,13 +128,6 @@ jobs:
         timeout-minutes: 30
         env:
           GOARCH: arm64
-          TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
-
-      - name: Build Linux s390x
-        run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
-        timeout-minutes: 30
-        env:
-          GOARCH: s390x
           TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
 
       - name: Upload binaries
