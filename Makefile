@@ -113,7 +113,7 @@ release-dir:
 	@echo $(RELEASE_DIR)
 
 .PHONY: generate
-generate: wasm-lib-build
+generate: ensure-wasmtime-s390x wasm-lib-build
 ifeq ($(GOOS),windows)
 	GOOS=linux go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.5.0
 endif
