@@ -72,7 +72,7 @@ build:
 .PHONY: test
 test:
 	@$(DOCKER) run $(DOCKER_FLAGS) -v $(CURDIR):/src:Z $(WASM_BUILDER_IMAGE) make $(WASM_OBJ_DIR)/opa-test.wasm
-	@$(DOCKER) run $(DOCKER_FLAGS) -e VERBOSE -v $(CURDIR):/src:Z -w /src node:14 node test.js $(WASM_OBJ_DIR)/opa-test.wasm
+	@$(DOCKER) run $(DOCKER_FLAGS) -e VERBOSE -v $(CURDIR):/src:Z -w /src node:14-bullseye node test.js $(WASM_OBJ_DIR)/opa-test.wasm
 
 .PHONY: hack
 hack:
