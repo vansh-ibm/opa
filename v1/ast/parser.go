@@ -1771,7 +1771,7 @@ func (p *Parser) parseTermFinish(head *Term, skipws bool) *Term {
 		return nil
 	}
 	offset := p.s.loc.Offset
-	p.doScan(skipws)
+	p.doScan(skipws, noScanOptions...)
 
 	switch p.s.tok {
 	case tokens.LParen, tokens.Dot, tokens.LBrack:
@@ -1792,7 +1792,7 @@ func (p *Parser) parseHeadFinish(head *Term, skipws bool) *Term {
 		return nil
 	}
 	offset := p.s.loc.Offset
-	p.doScan(false)
+	p.scanWS()
 
 	switch p.s.tok {
 	case tokens.Add, tokens.Sub, tokens.Mul, tokens.Quo, tokens.Rem,
@@ -1800,7 +1800,7 @@ func (p *Parser) parseHeadFinish(head *Term, skipws bool) *Term {
 		tokens.Equal, tokens.Neq, tokens.Gt, tokens.Gte, tokens.Lt, tokens.Lte:
 		p.illegalToken()
 	case tokens.Whitespace:
-		p.doScan(skipws)
+		p.doScan(skipws, noScanOptions...)
 	}
 
 	switch p.s.tok {
@@ -1890,6 +1890,11 @@ func (p *Parser) parseString() *Term {
 			return NewTerm(InternedEmptyString.Value).SetLocation(p.s.Loc())
 		}
 
+		inner := p.s.lit[1 : len(p.s.lit)-1]
+		if !strings.ContainsRune(inner, '\\') { // nothing to un-escape
+			return StringTerm(inner).SetLocation(p.s.Loc())
+		}
+
 		var s string
 		if err := json.Unmarshal([]byte(p.s.lit), &s); err != nil {
 			p.errorf(p.s.Loc(), "illegal string literal: %s", p.s.lit)
@@ -1910,9 +1915,17 @@ func (p *Parser) parseRawString() *Term {
 func templateStringPartToStringLiteral(tok tokens.Token, lit string) (string, error) {
 	switch tok {
 	case tokens.TemplateStringPart, tokens.TemplateStringEnd:
-		trimmed := fmt.Sprintf(`"%s"`, lit[1:len(lit)-1])
+		inner := lit[1 : len(lit)-1]
+		if !strings.ContainsRune(inner, '\\') { // nothing to un-escape
+			return inner, nil
+		}
+
+		buf := make([]byte, 0, len(inner)+2)
+		buf = append(buf, '"')
+		buf = append(buf, inner...)
+		buf = append(buf, '"')
 		var s string
-		if err := json.Unmarshal([]byte(trimmed), &s); err != nil {
+		if err := json.Unmarshal(buf, &s); err != nil {
 			return "", fmt.Errorf("illegal template-string part: %s", lit)
 		}
 		return s, nil
@@ -1927,7 +1940,7 @@ func (p *Parser) parseTemplateString(multiLine bool) *Term {
 	loc := p.s.Loc()
 
 	if !p.po.Capabilities.ContainsFeature(FeatureTemplateStrings) {
-		p.errorf(p.s.Loc(), "template strings are not supported by current capabilities")
+		p.errorf(loc, "template strings are not supported by current capabilities")
 		return nil
 	}
 
@@ -2004,7 +2017,7 @@ func (p *Parser) parseTemplateString(multiLine bool) *Term {
 			return nil
 		}
 
-		p.scanWS(scanner.ContinueTemplateString(multiLine))
+		p.doScan(false, scanner.ContinueTemplateString(multiLine))
 	}
 
 	// When there are template-expressions, the initial location will only contain the text up to the first expression
@@ -2442,7 +2455,8 @@ func (p *Parser) parseTermPairList(end tokens.Token, r [][2]*Term) [][2]*Term {
 
 func (p *Parser) parseTermOp(values ...tokens.Token) *Term {
 	if slices.Contains(values, p.s.tok) {
-		r := RefTerm(VarTerm(p.s.tok.String()).SetLocation(p.s.Loc())).SetLocation(p.s.Loc())
+		loc := p.s.Loc()
+		r := RefTerm(VarTerm(p.s.tok.String()).SetLocation(loc)).SetLocation(loc)
 		p.scan()
 		return r
 	}
@@ -2452,11 +2466,12 @@ func (p *Parser) parseTermOp(values ...tokens.Token) *Term {
 func (p *Parser) parseTermOpName(ref Ref, values ...tokens.Token) *Term {
 	if slices.Contains(values, p.s.tok) {
 		cp := ref.Copy()
+		loc := p.s.Loc()
 		for _, r := range cp {
-			r.SetLocation(p.s.Loc())
+			r.SetLocation(loc)
 		}
 		t := RefTerm(cp...)
-		t.SetLocation(p.s.Loc())
+		t.SetLocation(loc)
 		p.scan()
 		return t
 	}
@@ -2566,12 +2581,14 @@ func (p *Parser) illegalToken() {
 	p.illegal("")
 }
 
-func (p *Parser) scan(scanOpts ...scanner.ScanOption) {
-	p.doScan(true, scanOpts...)
+var noScanOptions []scanner.ScanOption
+
+func (p *Parser) scan() {
+	p.doScan(true, noScanOptions...)
 }
 
-func (p *Parser) scanWS(scanOpts ...scanner.ScanOption) {
-	p.doScan(false, scanOpts...)
+func (p *Parser) scanWS() {
+	p.doScan(false, noScanOptions...)
 }
 
 func (p *Parser) doScan(skipws bool, scanOpts ...scanner.ScanOption) {
