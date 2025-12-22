@@ -92,7 +92,7 @@ jobs:
 
   release-build:
     name: Release Build (linux, windows)
-    runs-on: S390X
+    runs-on: ubuntu-24.04
     needs: generate
     steps:
       - name: Check out code
@@ -109,6 +109,7 @@ jobs:
         run: echo "go_version=$(cat .go-version)" >> $GITHUB_OUTPUT
 
       - name: Install Go 1.25.5 (s390x)
+        if: runner.arch == 's390x'
         run: |
           set -e
           GO_VERSION=1.25.5
@@ -121,6 +122,12 @@ jobs:
           echo "/usr/local/go/bin" >> $GITHUB_PATH
 
           go version
+
+      - name: Install Go (${{ steps.go_version.outputs.go_version }})
+        if: runner.arch != 's390x'
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version: ${{ steps.go_version.outputs.go_version }}
 
       - name: Build Linux s390x
         run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
