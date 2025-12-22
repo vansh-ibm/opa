@@ -72,7 +72,11 @@ build:
 .PHONY: test
 test:
 	@$(DOCKER) run $(DOCKER_FLAGS) -v $(CURDIR):/src:Z $(WASM_BUILDER_IMAGE) make $(WASM_OBJ_DIR)/opa-test.wasm
-	@$(DOCKER) run $(DOCKER_FLAGS) -e VERBOSE -v $(CURDIR):/src:Z -w /src node:14-bullseye node test.js $(WASM_OBJ_DIR)/opa-test.wasm
+	@NODE_IMAGE="node:14"; \
+	if [ "$$(uname -m)" = "s390x" ]; then \
+		NODE_IMAGE="node:14-bullseye"; \
+	fi; \
+	$(DOCKER) run $(DOCKER_FLAGS) -e VERBOSE -v $(CURDIR):/src:Z -w /src $$NODE_IMAGE node test.js $(WASM_OBJ_DIR)/opa-test.wasm
 
 .PHONY: hack
 hack:
