@@ -13,7 +13,7 @@ jobs:
     permissions:
       contents: write  # for Git to git push
     name: Sync Generated Code and Docs
-    runs-on: S390X
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -80,7 +80,7 @@ jobs:
 
   code-coverage:
     name: Update Go Test Coverage
-    runs-on: S390X
+    runs-on: ubuntu-24.04
     needs: generate
     steps:
       - name: Check out code
@@ -108,33 +108,10 @@ jobs:
         name: Read go version
         run: echo "go_version=$(cat .go-version)" >> $GITHUB_OUTPUT
 
-      - name: Install Go 1.25.5 (s390x)
-        if: runner.arch == 's390x'
-        run: |
-          set -e
-          GO_VERSION=1.25.5
-
-          sudo rm -rf /usr/local/go
-
-          wget -q https://go.dev/dl/go${GO_VERSION}.linux-s390x.tar.gz
-          sudo tar -C /usr/local -xzf go${GO_VERSION}.linux-s390x.tar.gz
-
-          echo "/usr/local/go/bin" >> $GITHUB_PATH
-
-          go version
-
       - name: Install Go (${{ steps.go_version.outputs.go_version }})
-        if: runner.arch != 's390x'
         uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version: ${{ steps.go_version.outputs.go_version }}
-
-      - name: Build Linux s390x
-        run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
-        timeout-minutes: 30
-        env:
-          GOARCH: s390x
-          TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
 
       - name: Build Linux and Windows
         run: make ci-build-windows ci-go-ci-build-linux ci-go-ci-build-linux-static
@@ -154,6 +131,51 @@ jobs:
         if: always()
         with:
           name: binaries-linux-windows
+          path: _release
+
+  release-build-s390x:
+    name: Release Build (linux s390x)
+    runs-on: S390X
+    needs: generate
+    steps:
+      - name: Check out code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Git Describe
+        run: git describe --tags
+
+      - id: go_version
+        name: Read go version
+        run: echo "go_version=$(cat .go-version)" >> $GITHUB_OUTPUT
+
+      - name: Install Go 1.25.5 (s390x)
+        run: |
+          set -e
+          GO_VERSION=1.25.5
+
+          sudo rm -rf /usr/local/go
+
+          wget -q https://go.dev/dl/go${GO_VERSION}.linux-s390x.tar.gz
+          sudo tar -C /usr/local -xzf go${GO_VERSION}.linux-s390x.tar.gz
+
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
+
+          go version
+
+      - name: Build Linux s390x
+        run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
+        timeout-minutes: 30
+        env:
+          TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        if: always()
+        with:
+          name: binaries-linux-s390x
           path: _release
 
   release-build-darwin:
@@ -196,7 +218,7 @@ jobs:
 
   deploy-edge:
     name: Push Edge Release
-    runs-on: S390X
+    runs-on: ubuntu-24.04
     needs: [release-build, release-build-darwin]
     steps:
       - name: Check out code
@@ -230,7 +252,7 @@ jobs:
 
   deploy-wasm-builder:
     name: Deploy WASM Builder
-    runs-on: S390X
+    runs-on: ubuntu-24.04
     needs: generate
     steps:
       - name: Check out code
@@ -247,7 +269,7 @@ jobs:
 
   website-smoke-test:
     name : Website Smoke Test
-    runs-on: S390X
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
