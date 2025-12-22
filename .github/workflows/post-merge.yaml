@@ -219,7 +219,7 @@ jobs:
   deploy-edge:
     name: Push Edge Release
     runs-on: ubuntu-24.04
-    needs: [release-build, release-build-darwin]
+    needs: [release-build, release-build-darwin, release-build-s390x]
     steps:
       - name: Check out code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
