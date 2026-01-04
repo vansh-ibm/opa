@@ -124,6 +124,13 @@ jobs:
           GOARCH: arm64
           TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
 
+      - name: Build Linux s390x
+        run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
+        timeout-minutes: 30
+        env:
+          GOARCH: s390x
+          TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
+
       - name: Upload binaries
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
@@ -131,55 +138,55 @@ jobs:
           name: binaries-linux-windows
           path: _release
 
-  release-build-s390x:
-    name: Release Build (linux s390x)
-    runs-on: S390X
-    needs: generate
-    steps:
-      - name: Check out code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+  # release-build-s390x:
+  #   name: Release Build (linux s390x)
+  #   runs-on: S390X
+  #   needs: generate
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+  #       with:
+  #         fetch-depth: 0
+  #         fetch-tags: true
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.DOCKER_USERNAME }}
+  #         password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Git Describe
-        run: git describe --tags
+  #     - name: Git Describe
+  #       run: git describe --tags
 
-      - id: go_version
-        name: Read go version
-        run: echo "go_version=$(cat .go-version)" >> $GITHUB_OUTPUT
+  #     - id: go_version
+  #       name: Read go version
+  #       run: echo "go_version=$(cat .go-version)" >> $GITHUB_OUTPUT
 
-      - name: Install Go 1.25.5 (s390x)
-        run: |
-          set -e
-          GO_VERSION=1.25.5
+  #     - name: Install Go 1.25.5 (s390x)
+  #       run: |
+  #         set -e
+  #         GO_VERSION=1.25.5
 
-          sudo rm -rf /usr/local/go
+  #         sudo rm -rf /usr/local/go
 
-          wget -q https://go.dev/dl/go${GO_VERSION}.linux-s390x.tar.gz
-          sudo tar -C /usr/local -xzf go${GO_VERSION}.linux-s390x.tar.gz
+  #         wget -q https://go.dev/dl/go${GO_VERSION}.linux-s390x.tar.gz
+  #         sudo tar -C /usr/local -xzf go${GO_VERSION}.linux-s390x.tar.gz
 
-          echo "/usr/local/go/bin" >> $GITHUB_PATH
+  #         echo "/usr/local/go/bin" >> $GITHUB_PATH
 
-          go version
+  #         go version
 
-      - name: Build Linux s390x
-        run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
-        timeout-minutes: 30
-        env:
-          TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
+  #     - name: Build Linux s390x
+  #       run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
+  #       timeout-minutes: 30
+  #       env:
+  #         TELEMETRY_URL: ${{ secrets.TELEMETRY_URL }}
 
-      - name: Upload binaries
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        if: always()
-        with:
-          name: binaries-linux-s390x
-          path: _release
+  #     - name: Upload binaries
+  #       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+  #       if: always()
+  #       with:
+  #         name: binaries-linux-s390x
+  #         path: _release
 
   release-build-darwin:
     name: Release Build (darwin)
@@ -222,7 +229,7 @@ jobs:
   deploy-edge:
     name: Push Edge Release
     runs-on: ubuntu-24.04
-    needs: [release-build, release-build-darwin, release-build-s390x]
+    needs: [release-build, release-build-darwin]
     steps:
       - name: Check out code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
