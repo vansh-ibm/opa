@@ -19,7 +19,11 @@ RUN apt-get update && \
       libc++-13-dev \
       libc++abi-13-dev \
       lld-13 && \
-    update-alternatives --install /usr/bin/ld ld /usr/bin/lld-13 90 && \
+    if [ "$(uname -m)" = "s390x" ]; then \
+        update-alternatives --install /usr/bin/ld ld /usr/bin/ld.bfd 90; \
+    else \
+        update-alternatives --install /usr/bin/ld ld /usr/bin/lld-13 90; \
+    fi && \
     update-alternatives --install /usr/bin/cc cc /usr/bin/clang-13 90 && \
     update-alternatives --install /usr/bin/cpp cpp /usr/bin/clang++-13 90 && \
     update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-13 90
