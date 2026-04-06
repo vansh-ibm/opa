@@ -258,7 +258,7 @@ deb:
 .PHONY: wasm-test
 wasm-test: ensure-wasmtime-s390x wasm-lib-test wasm-rego-test
 
-.PHONY: wasm-lib-build
+.PHONY: wasm-lib-build 
 wasm-lib-build:
 ifeq ($(DOCKER_RUNNING), 1)
 	@$(MAKE) -C wasm builder build
