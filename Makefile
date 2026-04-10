@@ -261,11 +261,11 @@ wasm-test: ensure-wasmtime-s390x wasm-lib-test wasm-rego-test
 .PHONY: wasm-lib-build 
 wasm-lib-build:
 ifeq ($(DOCKER_RUNNING), 1)
-	ifeq ($(GOARCH),s390x)
+ifeq ($(GOARCH),s390x)
 	@$(MAKE) -C wasm builder build
-	else
+else
 	@$(MAKE) -C wasm ensure-builder build
-	endif
+endif
 	cp wasm/_obj/opa.wasm internal/compiler/wasm/opa/opa.wasm
 	cp wasm/_obj/callgraph.csv internal/compiler/wasm/opa/callgraph.csv
 else
