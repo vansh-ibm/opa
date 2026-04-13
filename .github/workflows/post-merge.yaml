@@ -154,10 +154,10 @@ jobs:
         name: Read go version
         run: echo "go_version=$(cat .go-version)" >> $GITHUB_OUTPUT
 
-      - name: Install Go 1.25.5 (s390x)
+      - name: Install Go (${{ steps.go_version.outputs.go_version }}) (s390x)
         run: |
           set -e
-          GO_VERSION=1.25.5
+          GO_VERSION=${{ steps.go_version.outputs.go_version }}
 
           sudo rm -rf /usr/local/go
 
