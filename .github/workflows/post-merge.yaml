@@ -166,7 +166,7 @@ jobs:
 
           echo "/usr/local/go/bin" >> $GITHUB_PATH
 
-          go version
+          /usr/local/go/bin/go version
 
       - name: Build Linux s390x
         run: make ci-go-ci-build-linux ci-go-ci-build-linux-static
